@@ -1,4 +1,10 @@
-const outputCanvas = document.getElementById('output-canvas') as HTMLCanvasElement;
-const drawingCtx = outputCanvas.getContext('2d');
-drawingCtx.fillStyle = '#323202';
-drawingCtx.fillRect(0, 0, 512, 288);
+import REGL from 'regl';
+import { setupCanvas } from './setup';
+class App {
+  canvas: HTMLCanvasElement;
+  regl: REGL.Regl;
+  constructor() {
+    [this.canvas, this.regl] = setupCanvas('output-canvas');
+  }
+}
+new App();
