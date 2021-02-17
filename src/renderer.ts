@@ -1,4 +1,4 @@
-import REGL, { Regl } from 'regl';
+import REGL, { DefaultContext, DrawCommand, Regl } from 'regl';
 import vertShader from './shaders/testVert.vert';
 import idenShader from './shaders/passthroughFrag.frag';
 import { HEIGHT, WIDTH } from './constants';
@@ -49,8 +49,8 @@ export class Renderer {
   }
   get currentPixels() {
     return this.next === 'a'
-      ? this.gl.read({ framebuffer: this.bFBO })
-      : this.gl.read({ framebuffer: this.aFBO });
+      ? (this.gl.read({ framebuffer: this.bFBO }) as Float32Array)
+      : (this.gl.read({ framebuffer: this.aFBO }) as Float32Array);
   }
   get nextTex() {
     return this.next === 'b' ? this.bTexture : this.aTexture;
@@ -58,30 +58,30 @@ export class Renderer {
   swap() {
     this.next = this.next === 'a' ? 'b' : 'a';
   }
-  render<T extends REGL.DrawCommand>(drawFunc: T, ...funcArgs: Parameters<T>) {
+  render<U, T extends (U) => any>(drawFunc: T, props: U) {
     switch (this.next) {
       case 'a':
         this.defaultDraw({ fb: this.aFBO, oldTex: this.bTexture }, () => {
-          drawFunc(funcArgs);
+          drawFunc(props);
         });
         break;
       default:
         this.defaultDraw({ fb: this.bFBO, oldTex: this.aTexture }, () => {
-          drawFunc(funcArgs);
+          drawFunc(props);
         });
     }
     this.swap();
   }
-  renderToScreen() {
+  renderToScreen(drawFunc = this.identityDraw) {
     switch (this.next) {
       case 'a':
         this.defaultDraw({ fb: null, oldTex: this.bTexture }, () => {
-          this.identityDraw();
+          drawFunc();
         });
         break;
       default:
         this.defaultDraw({ fb: null, oldTex: this.aTexture }, () => {
-          this.identityDraw();
+          drawFunc();
         });
     }
   }
